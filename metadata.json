@@ -1,0 +1,9 @@
+{
+  "uuid": "github-prs@manuelamr",
+  "name": "PullRadar",
+  "description": "Shows open pull requests pending merge for a list of GitHub repositories.",
+  "shell-version": ["49"],
+  "settings-schema": "org.gnome.shell.extensions.github-prs",
+  "url": "https://github.com/manuelamr/pullradar",
+  "version": 1
+}

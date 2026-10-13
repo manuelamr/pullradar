@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.github-prs" path="/org/gnome/shell/extensions/github-prs/">
+    <key name="repositories" type="as">
+      <default>['myorg/reponame']</default>
+      <summary>Repositories to watch (owner/name)</summary>
+    </key>
+    <key name="refresh-interval" type="u">
+      <range min="60" max="86400"/>
+      <default>300</default>
+      <summary>Refresh interval in seconds</summary>
+    </key>
+    <key name="include-drafts" type="b">
+      <default>false</default>
+      <summary>Include draft pull requests</summary>
+    </key>
+    <key name="expiration-warning-days" type="u">
+      <range min="0" max="90"/>
+      <default>3</default>
+      <summary>Warn this many days before the GitHub token expires (0 disables)</summary>
+    </key>
+    <key name="show-empty-repositories" type="b">
+      <default>false</default>
+      <summary>Show repositories without pending pull requests</summary>
+    </key>
+    <key name="token-env-var" type="s">
+      <default>'GITHUB_TOKEN'</default>
+      <summary>Environment variable holding the GitHub PAT</summary>
+    </key>
+    <key name="token-file" type="s">
+      <default>'~/.config/github-prs/token'</default>
+      <summary>File containing the GitHub PAT (used when the token environment variable is not set in the session)</summary>
+    </key>
+  </schema>
+</schemalist>
