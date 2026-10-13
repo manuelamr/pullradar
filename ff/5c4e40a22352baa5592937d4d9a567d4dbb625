@@ -1,0 +1,18 @@
+indicator.js
+  h_33ee8297b51f3b 112,114-115,118,123,129-131
+prefs.js
+  h_33ee8297b51f3b 38-44
+schemas/org.gnome.shell.extensions.github-prs.gschema.xml
+  h_33ee8297b51f3b 22-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ff5c4e40a22352baa5592937d4d9a567d4dbb625",
+  "prompts": {},
+  "humans": {
+    "h_33ee8297b51f3b": {
+      "author": "Manuel Alberto Moro <manuelamr@inditex.com>"
+    }
+  }
+}
