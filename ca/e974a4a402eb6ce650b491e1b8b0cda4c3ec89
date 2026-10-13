@@ -1,0 +1,28 @@
+.gitignore
+  h_33ee8297b51f3b 1-2
+extension.js
+  h_33ee8297b51f3b 1-20
+githubClient.js
+  h_33ee8297b51f3b 1-45
+icons/pull-request-symbolic.svg
+  h_33ee8297b51f3b 1
+indicator.js
+  h_33ee8297b51f3b 1-164
+metadata.json
+  h_33ee8297b51f3b 1-8
+prefs.js
+  h_33ee8297b51f3b 1-87
+schemas/org.gnome.shell.extensions.github-prs.gschema.xml
+  h_33ee8297b51f3b 1-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cae974a4a402eb6ce650b491e1b8b0cda4c3ec89",
+  "prompts": {},
+  "humans": {
+    "h_33ee8297b51f3b": {
+      "author": "Manuel Alberto Moro <manuelamr@inditex.com>"
+    }
+  }
+}
