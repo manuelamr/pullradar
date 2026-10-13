@@ -1,0 +1,18 @@
+indicator.js
+  h_33ee8297b51f3b 16,39-40,97,124,181-183
+pullRequestItem.js
+  h_33ee8297b51f3b 65,69-71,75-76,80-83
+tooltip.js
+  h_33ee8297b51f3b 1-66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9688cdf4122c1f08c7c4d7768cda6e802610030e",
+  "prompts": {},
+  "humans": {
+    "h_33ee8297b51f3b": {
+      "author": "Manuel Alberto Moro <manuelamr@inditex.com>"
+    }
+  }
+}
