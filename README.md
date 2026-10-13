@@ -14,6 +14,7 @@ A GNOME Shell extension that keeps an eye on the open pull requests of your GitH
 
 - Click a PR to open it in the browser; click a repository to open its PR list.
 - Warning when the token is invalid (`401`) and a configurable number of days before it expires.
+- Resilient refresh: 15 s request timeout, **Refresh** cancels any pending attempt, automatic retry when the network comes back, and per-repository errors (`403`/`404`) without hiding the rest.
 
 Requires **GNOME Shell 49**.
 

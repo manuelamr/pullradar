@@ -34,8 +34,9 @@ class PullRequestsIndicator extends PanelMenu.Button {
 
         this._extension = extension;
         this._settings = extension.getSettings();
-        this._cancellable = new Gio.Cancellable();
+        this._refreshCancellable = null;
         this._refreshSourceId = null;
+        this._refreshItem = null;
         this._tooltip = new Tooltip();
         this._menuOpenChangedId = this.menu.connect('open-state-changed', () => this._tooltip.hide());
 
@@ -51,6 +52,19 @@ class PullRequestsIndicator extends PanelMenu.Button {
         this.add_child(box);
 
         this._settingsChangedId = this._settings.connect('changed', () => this._restartRefreshLoop());
+
+        this._networkMonitor = Gio.NetworkMonitor.get_default();
+        this._networkAvailable = this._networkMonitor.network_available;
+        this._networkChangedId = this._networkMonitor.connect('network-changed', (monitor, available) => {
+            const reconnected = available && !this._networkAvailable;
+            this._networkAvailable = available;
+            if (reconnected)
+                this._refresh();
+            else if (!available)
+                this._renderOffline();
+        });
+
+        this._addRefreshItem('starting');
         this._restartRefreshLoop();
     }
 
@@ -67,11 +81,21 @@ class PullRequestsIndicator extends PanelMenu.Button {
     }
 
     async _refresh() {
+        if (!this._networkAvailable) {
+            this._renderOffline();
+            return;
+        }
+
         const token = readToken(this._settings.get_string('token-env-var'), this._settings.get_string('token-file'));
         if (!token) {
             this._renderError(`No GitHub token found (${this._settings.get_string('token-env-var')} or token file)`);
             return;
         }
+
+        this._cancelRefresh();
+        const cancellable = new Gio.Cancellable();
+        this._refreshCancellable = cancellable;
+        this._showLoading();
 
         const client = new GitHubClient(token);
         const includeDrafts = this._settings.get_boolean('include-drafts');
@@ -79,23 +103,54 @@ class PullRequestsIndicator extends PanelMenu.Button {
 
         try {
             const results = await Promise.all(repositories.map(async repository => {
-                const pulls = await client.listOpenPullRequests(repository, this._cancellable);
-                return {repository, pulls: pulls.filter(pull => includeDrafts || !pull.isDraft)};
+                try {
+                    const pulls = await client.listOpenPullRequests(repository, cancellable);
+                    return {repository, pulls: pulls.filter(pull => includeDrafts || !pull.isDraft), error: null};
+                } catch (error) {
+                    if (error instanceof AuthError || cancellable.is_cancelled())
+                        throw error;
+                    return {repository, pulls: [], error: error.message};
+                }
             }));
+            if (results.length > 0 && results.every(result => result.error))
+                throw new Error(results[0].error);
             this._render(results, client.tokenExpiration);
         } catch (error) {
+            if (cancellable.is_cancelled())
+                return;
             if (error instanceof AuthError)
-                this._renderError('GitHub token invalid or expired (401).\nUpdate ~/.config/github-prs/token with a new PAT.', 'auth!');
-            else if (!(error instanceof GLib.Error && error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED)))
+                this._renderError('GitHub token invalid or expired (401).\nUpdate the token and click Refresh.', 'auth!');
+            else
                 this._renderError(error.message);
         } finally {
             client.destroy();
+            if (this._refreshCancellable === cancellable)
+                this._refreshCancellable = null;
         }
+    }
+
+    _showLoading() {
+        this._countLabel.text = '…';
+        if (this._refreshItem)
+            this._refreshItem.label.text = 'Refreshing…';
+    }
+
+    _cancelRefresh() {
+        if (this._refreshCancellable) {
+            this._refreshCancellable.cancel();
+            this._refreshCancellable = null;
+        }
+    }
+
+    _renderOffline() {
+        this._cancelRefresh();
+        this._renderError('Offline. Waiting for the network to come back…', 'off');
     }
 
     _render(results, tokenExpiration) {
         this._tooltip.hide();
         this.menu.removeAll();
+        this._refreshItem = null;
         const total = results.reduce((sum, result) => sum + result.pulls.length, 0);
         this._countLabel.text = `${total}`;
         this._renderExpirationWarning(tokenExpiration);
@@ -103,7 +158,7 @@ class PullRequestsIndicator extends PanelMenu.Button {
         const showEmptyRepositories = this._settings.get_boolean('show-empty-repositories');
         const oldestCreation = pulls => Math.min(...pulls.map(pull => Date.parse(pull.createdAt)));
         const visibleResults = results
-            .filter(result => showEmptyRepositories || result.pulls.length > 0)
+            .filter(result => showEmptyRepositories || result.error || result.pulls.length > 0)
             .sort((a, b) => oldestCreation(a.pulls) - oldestCreation(b.pulls));
 
         if (visibleResults.length === 0) {
@@ -111,13 +166,15 @@ class PullRequestsIndicator extends PanelMenu.Button {
             this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
         }
 
-        for (const {repository, pulls} of visibleResults) {
+        for (const {repository, pulls, error} of visibleResults) {
             const header = new PopupMenu.PopupMenuItem(`${repository} (${pulls.length})`);
             header.label.style = 'font-weight: bold;';
             header.connect('activate', () => this._openUri(`https://github.com/${repository}/pulls`));
             this.menu.addMenuItem(header);
 
-            if (pulls.length === 0)
+            if (error)
+                this.menu.addMenuItem(new PopupMenu.PopupImageMenuItem(error.replace(`${repository}: `, ''), 'dialog-warning-symbolic', {reactive: false}));
+            else if (pulls.length === 0)
                 this.menu.addMenuItem(new PopupMenu.PopupMenuItem('No pending PRs', {reactive: false}));
 
             for (const pull of pulls) {
@@ -149,17 +206,22 @@ class PullRequestsIndicator extends PanelMenu.Button {
     }
 
     _renderError(text, panelText = '!') {
+        this._tooltip.hide();
         this.menu.removeAll();
+        this._refreshItem = null;
         this._countLabel.text = panelText;
         this._warningIcon.visible = false;
         this.menu.addMenuItem(new PopupMenu.PopupMenuItem(text, {reactive: false}));
-        this._addRefreshItem();
+        this._addRefreshItem('last attempt');
     }
 
-    _addRefreshItem() {
-        const refresh = new PopupMenu.PopupMenuItem(`Refresh (updated ${GLib.DateTime.new_now_local().format('%H:%M')})`);
-        refresh.connect('activate', () => this._refresh());
-        this.menu.addMenuItem(refresh);
+    _addRefreshItem(statusText = 'updated') {
+        this._refreshItem = new PopupMenu.PopupMenuItem(`Refresh (${statusText} ${GLib.DateTime.new_now_local().format('%H:%M')})`);
+        this._refreshItem.connect('activate', () => {
+            this._networkAvailable = this._networkMonitor.network_available;
+            this._refresh();
+        });
+        this.menu.addMenuItem(this._refreshItem);
 
         const preferences = new PopupMenu.PopupMenuItem('Settings');
         preferences.connect('activate', () => this._extension.openPreferences());
@@ -175,7 +237,9 @@ class PullRequestsIndicator extends PanelMenu.Button {
             GLib.Source.remove(this._refreshSourceId);
             this._refreshSourceId = null;
         }
-        this._cancellable.cancel();
+        this._cancelRefresh();
+        this._networkMonitor.disconnect(this._networkChangedId);
+        this._networkMonitor = null;
         this._settings.disconnect(this._settingsChangedId);
         this._settings = null;
         this.menu.disconnect(this._menuOpenChangedId);

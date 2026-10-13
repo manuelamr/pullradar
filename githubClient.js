@@ -9,6 +9,7 @@ import Soup from 'gi://Soup?version=3.0';
 Gio._promisify(Soup.Session.prototype, 'send_and_read_async');
 
 const GRAPHQL_URL = 'https://api.github.com/graphql';
+const REQUEST_TIMEOUT_SECONDS = 15;
 
 const PULL_REQUESTS_QUERY = `
 query($owner: String!, $name: String!) {
@@ -55,7 +56,7 @@ function toPullRequest(node) {
 export class GitHubClient {
     constructor(token) {
         this._token = token;
-        this._session = new Soup.Session({user_agent: 'gnome-shell-github-prs'});
+        this._session = new Soup.Session({user_agent: 'gnome-shell-github-prs', timeout: REQUEST_TIMEOUT_SECONDS});
         this._encoder = new TextEncoder();
         this._decoder = new TextDecoder('utf-8');
         this.tokenExpiration = null;
@@ -70,21 +71,39 @@ export class GitHubClient {
         message.request_headers.append('Accept', 'application/vnd.github.merge-info-preview+json');
         message.set_request_body_from_bytes('application/json', new GLib.Bytes(this._encoder.encode(body)));
 
-        const bytes = await this._session.send_and_read_async(message, GLib.PRIORITY_DEFAULT, cancellable);
-        if (message.get_status() === Soup.Status.UNAUTHORIZED)
+        const bytes = await this._send(message, repository, cancellable);
+        const status = message.get_status();
+        if (status === Soup.Status.UNAUTHORIZED)
             throw new AuthError();
-        if (message.get_status() !== Soup.Status.OK)
-            throw new Error(`${repository}: HTTP ${message.get_status()} ${message.get_reason_phrase()}`);
+        if (status === Soup.Status.FORBIDDEN)
+            throw new Error(`${repository}: access denied (403). Check token permissions or SSO authorization.`);
+        if (status !== Soup.Status.OK)
+            throw new Error(`${repository}: HTTP ${status} ${message.get_reason_phrase()}`);
 
         const expiration = message.response_headers.get_one('github-authentication-token-expiration');
         if (expiration)
             this.tokenExpiration = new Date(expiration.replace(' UTC', 'Z').replace(' ', 'T'));
 
         const response = JSON.parse(this._decoder.decode(bytes.get_data()));
-        if (response.errors)
+        if (response.errors) {
+            if (response.errors.some(error => error.type === 'NOT_FOUND'))
+                throw new Error(`${repository}: not found or no access (404)`);
             throw new Error(`${repository}: ${response.errors.map(error => error.message).join('; ')}`);
+        }
 
         return response.data.repository.pullRequests.nodes.map(toPullRequest);
+    }
+
+    async _send(message, repository, cancellable) {
+        try {
+            return await this._session.send_and_read_async(message, GLib.PRIORITY_DEFAULT, cancellable);
+        } catch (error) {
+            if (error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
+                throw error;
+            if (error.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.TIMED_OUT))
+                throw new Error(`${repository}: GitHub did not answer within ${REQUEST_TIMEOUT_SECONDS}s`);
+            throw new Error(`${repository}: cannot reach GitHub (${error.message})`);
+        }
     }
 
     destroy() {
