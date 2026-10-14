@@ -177,7 +177,7 @@ class PullRequestsIndicator extends PanelMenu.Button {
             else if (pulls.length === 0)
                 this.menu.addMenuItem(new PopupMenu.PopupMenuItem('No pending PRs', {reactive: false}));
 
-            for (const pull of pulls) {
+            for (const pull of [...pulls].sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt))) {
                 const item = new PullRequestItem(pull, `${this._extension.path}/icons`, this._tooltip);
                 item.connect('activate', () => this._openUri(pull.url));
                 this.menu.addMenuItem(item);
