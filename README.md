@@ -107,6 +107,17 @@ Reset to defaults: `dconf reset -f /org/gnome/shell/extensions/github-prs/`
 journalctl -f -o cat /usr/bin/gnome-shell
 ```
 
+## Development
+
+Test changes in a nested GNOME Shell window instead of logging out and back in. Requires `mutter-devel` (`sudo dnf install -y mutter-devel`).
+
+```sh
+scripts/devkit.sh          # open the devkit window, showing only extension-related log lines
+scripts/devkit.sh --check  # start, print the extension state and errors after ~20 s, then exit (non-zero if not active)
+```
+
+The nested session uses your regular dconf settings. Close the window and run the script again to load new code. Full log: `/tmp/pullradar-devkit.log`.
+
 ## License
 
 [GPL-2.0-or-later](LICENSE)
