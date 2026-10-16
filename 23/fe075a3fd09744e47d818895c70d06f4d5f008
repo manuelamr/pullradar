@@ -1,0 +1,19 @@
+scripts/devkit.sh
+  s_1411bc38bc6a13::t_caf8cb3d054dd1 1-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "23fe075a3fd09744e47d818895c70d06f4d5f008",
+  "prompts": {},
+  "sessions": {
+    "s_1411bc38bc6a13": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_ecb7e151affe7ZCB3jKbUT1SIn",
+        "model": "claude-opus-5.5"
+      },
+      "human_author": "Manuel Alberto Moro <manuelamr@inditex.com>"
+    }
+  }
+}
