@@ -1,0 +1,24 @@
+README.md
+  h_33ee8297b51f3b 19,78,100
+githubClient.js
+  h_33ee8297b51f3b 57,60-61
+indicator.js
+  h_33ee8297b51f3b 100
+metadata.json
+  h_33ee8297b51f3b 5
+prefs.js
+  h_33ee8297b51f3b 71-75
+schemas/org.gnome.shell.extensions.github-prs.gschema.xml
+  h_33ee8297b51f3b 26-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "08b86c32e9f7d9a896975f75dcad354055577e07",
+  "prompts": {},
+  "humans": {
+    "h_33ee8297b51f3b": {
+      "author": "Manuel Alberto Moro <manuelamr@inditex.com>"
+    }
+  }
+}
