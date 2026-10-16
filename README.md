@@ -16,7 +16,7 @@ A GNOME Shell extension that keeps an eye on the open pull requests of your GitH
 - Warning when the token is invalid (`401`) and a configurable number of days before it expires.
 - Resilient refresh: 15 s request timeout, **Refresh** cancels any pending attempt, automatic retry when the network comes back, and per-repository errors (`403`/`404`) without hiding the rest.
 
-Requires **GNOME Shell 49**.
+Requires **GNOME Shell 49 or 50**.
 
 ## Installation
 
@@ -75,6 +75,7 @@ refresh-interval=uint32 300
 include-drafts=false
 show-empty-repositories=false
 expiration-warning-days=uint32 3
+proxy-url=''
 token-env-var='GITHUB_TOKEN'
 token-file='~/.config/github-prs/token'
 EOF
@@ -96,6 +97,7 @@ Reset to defaults: `dconf reset -f /org/gnome/shell/extensions/github-prs/`
 | `include-drafts` | `false` | Include draft PRs |
 | `show-empty-repositories` | `false` | List repositories without pending PRs |
 | `expiration-warning-days` | `3` | Days before token expiration to warn (`0` disables) |
+| `proxy-url` | `''` | HTTP proxy for GitHub requests, e.g. `http://user:pass@proxy:8080` (empty uses the system proxy settings) |
 | `token-env-var` | `GITHUB_TOKEN` | Environment variable holding the token |
 | `token-file` | `~/.config/github-prs/token` | Fallback token file |
 

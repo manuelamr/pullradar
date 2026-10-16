@@ -54,9 +54,11 @@ function toPullRequest(node) {
 }
 
 export class GitHubClient {
-    constructor(token) {
+    constructor(token, proxyUrl) {
         this._token = token;
         this._session = new Soup.Session({user_agent: 'gnome-shell-github-prs', timeout: REQUEST_TIMEOUT_SECONDS});
+        if (proxyUrl)
+            this._session.proxy_resolver = Gio.SimpleProxyResolver.new(proxyUrl, null);
         this._encoder = new TextEncoder();
         this._decoder = new TextDecoder('utf-8');
         this.tokenExpiration = null;

@@ -68,6 +68,11 @@ export default class GitHubPullRequestsPreferences extends ExtensionPreferences 
         settings.bind('expiration-warning-days', expirationRow, 'value', Gio.SettingsBindFlags.DEFAULT);
         group.add(expirationRow);
 
+        const proxyRow = new Adw.EntryRow({title: 'HTTP proxy (empty = system settings)'});
+        proxyRow.set_tooltip_text('e.g. http://proxy.example.com:8080 or http://user:pass@proxy.example.com:8080');
+        settings.bind('proxy-url', proxyRow, 'text', Gio.SettingsBindFlags.DEFAULT);
+        group.add(proxyRow);
+
         return group;
     }
 

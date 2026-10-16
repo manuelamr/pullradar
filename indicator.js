@@ -97,7 +97,7 @@ class PullRequestsIndicator extends PanelMenu.Button {
         this._refreshCancellable = cancellable;
         this._showLoading();
 
-        const client = new GitHubClient(token);
+        const client = new GitHubClient(token, this._settings.get_string('proxy-url').trim());
         const includeDrafts = this._settings.get_boolean('include-drafts');
         const repositories = this._settings.get_strv('repositories');
 

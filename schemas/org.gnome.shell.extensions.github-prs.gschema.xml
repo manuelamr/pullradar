@@ -23,6 +23,10 @@
       <default>false</default>
       <summary>Show repositories without pending pull requests</summary>
     </key>
+    <key name="proxy-url" type="s">
+      <default>''</default>
+      <summary>HTTP proxy URL for GitHub requests (empty uses the system proxy settings)</summary>
+    </key>
     <key name="token-env-var" type="s">
       <default>'GITHUB_TOKEN'</default>
       <summary>Environment variable holding the GitHub PAT</summary>
