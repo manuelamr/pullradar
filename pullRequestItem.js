@@ -43,9 +43,12 @@ const MERGE_STATUS = {
     DRAFT: [Color.NEUTRAL, 'Draft'],
 };
 
+function singleLine(text) {
+    return text.replace(/\s+/g, ' ').trim();
+}
+
 function truncate(text) {
-    const singleLine = text.replace(/\s+/g, ' ').trim();
-    return singleLine.length > MAX_TITLE_LENGTH ? `${singleLine.slice(0, MAX_TITLE_LENGTH - 1)}…` : singleLine;
+    return text.length > MAX_TITLE_LENGTH ? `${text.slice(0, MAX_TITLE_LENGTH - 1)}…` : text;
 }
 
 function ageOf(isoDate) {
@@ -85,9 +88,15 @@ class PullRequestItem extends PopupMenu.PopupBaseMenuItem {
         this.add_child(iconsBox);
 
         const draftTag = pullRequest.isDraft ? '[draft] ' : '';
-        this.add_child(new St.Label({
-            text: `#${pullRequest.number} ${draftTag}${truncate(pullRequest.title)} · ${pullRequest.author} · ${ageOf(pullRequest.createdAt)}`,
+        const fullTitle = singleLine(pullRequest.title);
+        const label = new St.Label({
+            text: `#${pullRequest.number} ${draftTag}${truncate(fullTitle)} · ${pullRequest.author} · ${ageOf(pullRequest.createdAt)}`,
             y_align: Clutter.ActorAlign.CENTER,
-        }));
+        });
+        tooltip.attach(label, () => {
+            const isTruncated = fullTitle.length > MAX_TITLE_LENGTH || label.clutter_text.get_layout().is_ellipsized();
+            return isTruncated ? fullTitle : null;
+        });
+        this.add_child(label);
     }
 });
