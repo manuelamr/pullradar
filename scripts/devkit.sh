@@ -1,6 +1,7 @@
 #!/bin/sh
 # Launch a nested GNOME Shell (devkit window) to test the extension without logging out.
-# Requires the mutter-devel package (provides /usr/libexec/mutter-devkit).
+# Requires the mutter-devkit package (Fedora 44+; mutter-devel on older releases),
+# which provides /usr/libexec/mutter-devkit.
 #
 # Usage:
 #   scripts/devkit.sh          Open the devkit window and show extension-related log lines
@@ -13,11 +14,21 @@ LOG_FILE="${TMPDIR:-/tmp}/pullradar-devkit.log"
 LOG_FILTER="$UUID|JS ERROR|JS WARNING|Unhandled promise|extension\.js|indicator\.js|githubClient\.js|pullRequestItem\.js|tooltip\.js|prefs\.js"
 
 if [ ! -x /usr/libexec/mutter-devkit ]; then
-    echo "mutter-devkit not found. Install it with: sudo dnf install -y mutter-devel" >&2
+    echo "mutter-devkit not found. Install it with: sudo dnf install -y mutter-devkit (Fedora 44+; mutter-devel on older releases)" >&2
     exit 1
 fi
 
 glib-compile-schemas "$EXTENSION_DIR/schemas"
+
+# The nested shell reads the same enabled-extensions setting as the real session
+ENABLED=$(gsettings get org.gnome.shell enabled-extensions)
+case "$ENABLED" in
+    *"'$UUID'"*) ;;
+    *) gsettings set org.gnome.shell enabled-extensions "$(python3 -c '
+import ast, sys
+enabled = ast.literal_eval(sys.argv[1].removeprefix("@as "))
+print(enabled + [sys.argv[2]])' "$ENABLED" "$UUID")" ;;
+esac
 
 if [ "${1:-}" != "--check" ]; then
     echo "Log: $LOG_FILE (close the devkit window to finish)"

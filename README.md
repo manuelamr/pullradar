@@ -109,7 +109,7 @@ journalctl -f -o cat /usr/bin/gnome-shell
 
 ## Development
 
-Test changes in a nested GNOME Shell window instead of logging out and back in. Requires `mutter-devel` (`sudo dnf install -y mutter-devel`).
+Test changes in a nested GNOME Shell window instead of logging out and back in. Requires `mutter-devkit` (`sudo dnf install -y mutter-devkit` on Fedora 44+; `mutter-devel` on older releases).
 
 ```sh
 scripts/devkit.sh          # open the devkit window, showing only extension-related log lines
