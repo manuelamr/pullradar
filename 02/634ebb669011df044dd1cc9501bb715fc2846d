@@ -1,0 +1,16 @@
+README.md
+  h_33ee8297b51f3b 112
+scripts/devkit.sh
+  h_33ee8297b51f3b 3-4,17,23-32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "02634ebb669011df044dd1cc9501bb715fc2846d",
+  "prompts": {},
+  "humans": {
+    "h_33ee8297b51f3b": {
+      "author": "Manuel Alberto Moro <manuelamr@inditex.com>"
+    }
+  }
+}
